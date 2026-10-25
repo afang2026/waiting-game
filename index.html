@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova Drift — Milky Way Explorer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="starfield"></div>
+
+<header id="topbar">
+  <div class="brand">
+    <span class="brand-icon">🛰️</span>
+    <div>
+      <h1>Nova Drift</h1>
+      <p class="tagline" id="rankLabel">Rookie Pilot · Sol System</p>
+    </div>
+  </div>
+  <div class="resources">
+    <div class="resource" title="Stardust — mined from asteroids">
+      <span class="res-icon">✨</span>
+      <span class="res-value" id="resStardust">0</span>
+    </div>
+    <div class="resource" title="Energy — fuels upgrades &amp; exploration">
+      <span class="res-icon">⚡</span>
+      <span class="res-value" id="resEnergy">0</span>
+    </div>
+    <div class="resource" title="Crystals — rare, from exploring &amp; focus sessions">
+      <span class="res-icon">💎</span>
+      <span class="res-value" id="resCrystals">0</span>
+    </div>
+  </div>
+</header>
+
+<div id="fatigueBanner" class="banner hidden">
+  <span id="fatigueText"></span>
+  <button id="fatigueCta" class="btn btn-small">Start a Pomodoro</button>
+</div>
+
+<main id="layout">
+
+  <section class="panel" id="shipPanel">
+    <h2>Spacecraft</h2>
+    <div class="ship-card">
+      <div class="ship-visual">
+        <div class="ship-body">🚀</div>
+        <div class="ship-glow"></div>
+      </div>
+      <div class="ship-stats">
+        <div class="stat-row"><span>Laser Power</span><span id="statLaser">—</span></div>
+        <div class="stat-row"><span>Collector</span><span id="statCollector">—</span>/s</div>
+        <div class="stat-row"><span>Reactor</span><span id="statReactor">—</span>/s</div>
+        <div class="stat-row"><span>Cargo Range</span><span id="statCargo">—</span>h</div>
+      </div>
+    </div>
+
+    <div class="upgrades" id="upgradeList"></div>
+  </section>
+
+  <section class="panel" id="centerPanel">
+    <div class="mining-zone" id="miningZone">
+      <h2>Mining Field <span class="hint">click asteroids to fire your laser</span></h2>
+      <div class="mining-area" id="miningArea"></div>
+    </div>
+
+    <div class="galaxy-map" id="galaxyMap">
+      <h2>Galaxy Map</h2>
+      <div class="planet-track" id="planetTrack"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="sidePanel">
+    <div class="pomodoro-card" id="pomodoroCard">
+      <h2>Focus Mode</h2>
+      <p class="muted">Start a study Pomodoro. The game pauses, your crew rests, and you return to a reward burst.</p>
+      <div id="pomodoroIdle">
+        <div class="duration-select" id="durationSelect">
+          <button class="chip" data-min="5">5m</button>
+          <button class="chip selected" data-min="25">25m</button>
+          <button class="chip" data-min="50">50m</button>
+        </div>
+        <button id="startPomodoro" class="btn btn-primary">Start Pomodoro</button>
+        <p class="muted small">Sessions completed: <span id="pomodoroCount">0</span></p>
+      </div>
+      <div id="pomodoroActive" class="hidden">
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <p class="muted small">Focus Mode engaged — the galaxy waits for you.</p>
+        <button id="cancelPomodoro" class="btn btn-ghost">Abandon session</button>
+      </div>
+    </div>
+
+    <div class="log-card">
+      <h2>Mission Log</h2>
+      <ul id="missionLog"></ul>
+    </div>
+
+    <div class="save-card">
+      <p class="muted small" id="saveStatus">Autosaving…</p>
+      <div class="save-actions">
+        <button id="exportSave" class="btn btn-small btn-ghost">Export</button>
+        <button id="importSave" class="btn btn-small btn-ghost">Import</button>
+        <button id="resetSave" class="btn btn-small btn-danger">Reset</button>
+      </div>
+      <div class="folder-sync">
+        <p class="muted small" id="folderStatus">Not linked to a local folder.</p>
+        <button id="linkFolder" class="btn btn-small btn-ghost">🔗 Link Save Folder</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <p id="modalBody"></p>
+    <button id="modalClose" class="btn btn-primary">Continue</button>
+  </div>
+</div>
+
+<div id="focusOverlay" class="focus-overlay hidden">
+  <div class="focus-content">
+    <div class="focus-ship">🚀</div>
+    <div class="focus-timer" id="focusTimerBig">25:00</div>
+    <p>Focus Mode — your fleet holds position while you study.</p>
+    <button id="cancelPomodoroBig" class="btn btn-ghost">Abandon session</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
