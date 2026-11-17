@@ -182,17 +182,39 @@ html, body {
 .asteroid {
   position: absolute;
   font-size: 34px;
-  cursor: crosshair;
   user-select: none;
   filter: drop-shadow(0 0 4px #000a);
-  transition: transform 0.15s ease;
   animation: drift 6s linear infinite;
 }
-.asteroid:hover { transform: scale(1.15); }
 @keyframes drift {
   0% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(6px) rotate(10deg); }
   100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.player-ship {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  font-size: 26px;
+  line-height: 30px;
+  text-align: center;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px var(--accent2));
+  z-index: 5;
+  will-change: left, top, transform;
+}
+
+.laser-bolt {
+  position: absolute;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent2), #fff);
+  box-shadow: 0 0 8px var(--accent2);
+  pointer-events: none;
+  z-index: 4;
 }
 .float-gain {
   position: absolute;

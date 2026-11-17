@@ -417,6 +417,9 @@ function enterFocusUI() {
   document.getElementById('focusOverlay').classList.remove('hidden');
   if (asteroidTimer) { clearTimeout(asteroidTimer); asteroidTimer = null; }
   document.querySelectorAll('.asteroid').forEach(a => a.remove());
+  clearProjectiles();
+  keys.up = keys.down = keys.left = keys.right = keys.space = false;
+  if (shipEl) shipEl.classList.add('hidden');
   updateFatigueBanner();
 }
 
@@ -425,6 +428,7 @@ function exitFocusUI() {
   document.getElementById('pomodoroActive').classList.add('hidden');
   document.getElementById('focusOverlay').classList.add('hidden');
   document.getElementById('pomodoroCount').textContent = state.pomodoro.sessionsCompleted;
+  if (shipEl) shipEl.classList.remove('hidden');
   scheduleAsteroid();
 }
 
@@ -464,7 +468,6 @@ function spawnAsteroid() {
   const maxY = area.clientHeight - 40;
   el.style.left = Math.max(0, Math.random() * maxX) + 'px';
   el.style.top = Math.max(0, Math.random() * maxY) + 'px';
-  el.addEventListener('click', () => mineAsteroid(el));
   area.appendChild(el);
   setTimeout(() => { if (el.parentNode) el.remove(); }, 8000);
 }
@@ -481,6 +484,142 @@ function mineAsteroid(el) {
   renderResources();
   renderStats();
 }
+
+// ---------- Player ship: WASD flight + Space laser ----------
+
+const SHIP_SIZE = 30;
+const SHIP_SPEED = 170;        // px/sec
+const PROJECTILE_SPEED = 480;  // px/sec
+const PROJECTILE_LIFETIME = 1000; // ms
+const SHOT_COOLDOWN = 220;     // ms
+const HIT_RADIUS = 22;         // px, bolt-to-asteroid hit distance
+
+const ship = { x: 20, y: 95, angle: 0 };
+const keys = { up: false, down: false, left: false, right: false, space: false };
+let shipEl = null;
+let projectiles = [];
+let lastShotTime = 0;
+let lastFrameTime = performance.now();
+
+function createShip() {
+  const area = document.getElementById('miningArea');
+  shipEl = document.createElement('div');
+  shipEl.className = 'player-ship';
+  shipEl.textContent = '🚀';
+  area.appendChild(shipEl);
+  ship.x = 20;
+  ship.y = area.clientHeight / 2 - SHIP_SIZE / 2;
+  renderShip();
+}
+
+function renderShip() {
+  if (!shipEl) return;
+  shipEl.style.left = ship.x + 'px';
+  shipEl.style.top = ship.y + 'px';
+  shipEl.style.transform = `rotate(${ship.angle}deg)`;
+}
+
+function spawnProjectile() {
+  const area = document.getElementById('miningArea');
+  const rad = ship.angle * Math.PI / 180;
+  const noseX = ship.x + SHIP_SIZE / 2 + Math.cos(rad) * (SHIP_SIZE / 2);
+  const noseY = ship.y + SHIP_SIZE / 2 + Math.sin(rad) * (SHIP_SIZE / 2);
+  const el = document.createElement('div');
+  el.className = 'laser-bolt';
+  el.style.left = noseX + 'px';
+  el.style.top = noseY + 'px';
+  el.style.transform = `rotate(${ship.angle}deg)`;
+  area.appendChild(el);
+  projectiles.push({
+    x: noseX, y: noseY,
+    vx: Math.cos(rad) * PROJECTILE_SPEED,
+    vy: Math.sin(rad) * PROJECTILE_SPEED,
+    el, born: performance.now()
+  });
+}
+
+function clearProjectiles() {
+  projectiles.forEach(p => p.el.remove());
+  projectiles = [];
+}
+
+function updateProjectiles(dt, area) {
+  const w = area.clientWidth, h = area.clientHeight;
+  const asteroids = Array.from(area.querySelectorAll('.asteroid'));
+  projectiles = projectiles.filter(p => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    if (p.x < -20 || p.x > w + 20 || p.y < -20 || p.y > h + 20 || performance.now() - p.born > PROJECTILE_LIFETIME) {
+      p.el.remove();
+      return false;
+    }
+    for (const aEl of asteroids) {
+      if (!aEl.parentNode) continue;
+      const ax = parseFloat(aEl.style.left) + 17;
+      const ay = parseFloat(aEl.style.top) + 17;
+      if (Math.hypot(p.x - ax, p.y - ay) < HIT_RADIUS) {
+        mineAsteroid(aEl);
+        p.el.remove();
+        return false;
+      }
+    }
+    p.el.style.left = p.x + 'px';
+    p.el.style.top = p.y + 'px';
+    return true;
+  });
+}
+
+function shipLoop(ts) {
+  const dt = Math.min(0.05, (ts - lastFrameTime) / 1000);
+  lastFrameTime = ts;
+  if (!state.pomodoro.active && shipEl) {
+    const area = document.getElementById('miningArea');
+    let dx = 0, dy = 0;
+    if (keys.left) dx -= 1;
+    if (keys.right) dx += 1;
+    if (keys.up) dy -= 1;
+    if (keys.down) dy += 1;
+    if (dx !== 0 || dy !== 0) {
+      const len = Math.hypot(dx, dy);
+      dx /= len; dy /= len;
+      ship.x = Math.max(0, Math.min(area.clientWidth - SHIP_SIZE, ship.x + dx * SHIP_SPEED * dt));
+      ship.y = Math.max(0, Math.min(area.clientHeight - SHIP_SIZE, ship.y + dy * SHIP_SPEED * dt));
+      ship.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    }
+    renderShip();
+    if (keys.space && ts - lastShotTime >= SHOT_COOLDOWN) {
+      lastShotTime = ts;
+      spawnProjectile();
+    }
+    updateProjectiles(dt, area);
+  }
+  requestAnimationFrame(shipLoop);
+}
+
+function onShipKeyDown(e) {
+  if (state.pomodoro.active) return;
+  switch (e.code) {
+    case 'KeyW': case 'ArrowUp': keys.up = true; e.preventDefault(); break;
+    case 'KeyS': case 'ArrowDown': keys.down = true; e.preventDefault(); break;
+    case 'KeyA': case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
+    case 'KeyD': case 'ArrowRight': keys.right = true; e.preventDefault(); break;
+    case 'Space': keys.space = true; e.preventDefault(); break;
+  }
+}
+function onShipKeyUp(e) {
+  switch (e.code) {
+    case 'KeyW': case 'ArrowUp': keys.up = false; break;
+    case 'KeyS': case 'ArrowDown': keys.down = false; break;
+    case 'KeyA': case 'ArrowLeft': keys.left = false; break;
+    case 'KeyD': case 'ArrowRight': keys.right = false; break;
+    case 'Space': keys.space = false; break;
+  }
+}
+window.addEventListener('keydown', onShipKeyDown);
+window.addEventListener('keyup', onShipKeyUp);
+window.addEventListener('blur', () => {
+  keys.up = keys.down = keys.left = keys.right = keys.space = false;
+});
 
 // ---------- Main tick ----------
 
@@ -738,6 +877,9 @@ function boot() {
   renderAll();
   updateFatigueBanner();
   initFolderSync();
+  createShip();
+  lastFrameTime = performance.now();
+  requestAnimationFrame(shipLoop);
 
   if (state.pomodoro.active) {
     enterFocusUI();

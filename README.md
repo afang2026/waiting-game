@@ -6,7 +6,7 @@ Play it by opening `index.html` in a browser, or host it on GitHub Pages.
 
 ## How it works
 
-- **Mine asteroids** by clicking them with your mining laser for instant Stardust and Energy.
+- **Fly and mine.** Use **WASD** (or arrow keys) to pilot your ship around the Mining Field, then hold **Space** to fire your laser — you have to aim and lead your shots to hit asteroids for Stardust and Energy.
 - **Upgrade your ship** — Solar Collector, Energy Reactor, Mining Laser, and Cargo Expansion — to grow your passive income and offline range.
 - **Explore planets** along the Galaxy Map, in order, to unlock permanent bonuses and rank up from Rookie Pilot to Galaxy Explorer.
 - **Walk away and come back.** The longer you're gone, the bigger the idle bonus on return (an exponential multiplier, capped by your Cargo Range upgrade) — short gaps barely matter, but a real break pays off.
